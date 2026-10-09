@@ -1,0 +1,62 @@
+{
+  "name": "pusula-learning",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "node scripts/test-e2e.mjs",
+    "db:migrate": "node scripts/run-ts.mjs scripts/migrate.ts",
+    "db:seed": "node scripts/run-ts.mjs scripts/seed.ts",
+    "worker": "node scripts/run-ts.mjs src/workers/main.ts",
+    "ocr:prepare": "node scripts/run-ts.mjs scripts/prepare-ocr.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "clean": "powershell.exe -ExecutionPolicy Bypass -File scripts/clean-workspace.ps1"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@napi-rs/canvas": "1.0.10",
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.117.3",
+    "@tailwindcss/postcss": "4.3.3",
+    "cheerio": "1.2.0",
+    "ipaddr.js": "2.5.0",
+    "lucide-react": "1.53.0",
+    "next": "16.4.0",
+    "pdfjs-dist": "6.4.299",
+    "pg": "8.23.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "tesseract.js": "7.0.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.64.0",
+    "@types/node": "26.6.4",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "prettier": "3.9.9",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1",
+    "vitest": "5.0.3"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}
