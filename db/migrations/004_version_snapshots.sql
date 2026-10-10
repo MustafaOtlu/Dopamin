@@ -1,0 +1,11 @@
+alter table activity_versions add column objective_id uuid;
+alter table activity_versions disable trigger immutable_activity;
+update activity_versions v set objective_id=a.objective_id from activities a where a.id=v.activity_id;
+alter table activity_versions enable trigger immutable_activity;
+alter table activity_versions alter column objective_id set not null;
+alter table activity_versions add constraint activity_version_objective_fk foreign key(objective_id,course_id) references objectives(id,course_id);
+alter table activities add column published_version integer;
+update activities a set published_version=(select max(v.version) from activity_versions v where v.activity_id=a.id and v.published_at is not null);
+alter table activities add constraint activity_published_version_fk foreign key(id,published_version) references activity_versions(activity_id,version) deferrable initially deferred;
+drop policy read_course on activities;
+create policy read_course on activities for select using(owns_course(course_id) or (enrolled_course(course_id) and published_version is not null and status!='archived'));
