@@ -1,0 +1,10 @@
+{
+  "name": "Dopamin · Öğrenme yolculuğun",
+  "short_name": "Dopamin",
+  "lang": "tr",
+  "start_url": "/app",
+  "display": "standalone",
+  "background_color": "#101f28",
+  "theme_color": "#101f28",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
