@@ -293,6 +293,90 @@ describe("M2 belge ve üretim hattı", () => {
     ).toHaveLength(1);
     expect(await db.query("select * from ai_usage")).toHaveLength(2);
   });
+  it("ilerleyen sayfalardaki kaynak soru üretimine ve müfredat onayına ulaşır", async () => {
+    const advanced = await asUser(db, teacher.id, (tx) =>
+      createObjective(tx, teacher, course.id, {
+        topic_title: "Özyineleme",
+        title: "Özyinelemenin durma koşulunu açıklayabilme",
+        week: 2,
+        scheduled_date: today(),
+      }),
+    );
+    for (let i = 1; i <= 45; i++)
+      await db.query(
+        "insert into document_chunks(document_id,course_id,page,chunk_index,text,heading) values($1,$2,$3,$4,$5,$6)",
+        [
+          doc.id,
+          course.id,
+          i + 1,
+          i,
+          i === 45
+            ? "Özyineleme, durma koşuluna ulaşana kadar kendini çağırır."
+            : `Genel giriş bilgisi ${i}`,
+          i === 45 ? "Özyineleme" : "Giriş",
+        ],
+      );
+    const quote = "Özyineleme, durma koşuluna ulaşana kadar kendini çağırır.";
+    const fake: Generate = async (_name, schema, _instructions, input) => {
+      const sources = (input as { sources: { page: number }[] }).sources;
+      expect(sources.some((source) => source.page === 46)).toBe(true);
+      expect(sources.length).toBeLessThanOrEqual(18);
+      return {
+        data: schema.parse({
+          kind: "true_false",
+          title: "Durma koşulu",
+          instruction: "Önermeyi değerlendir.",
+          explanation: quote,
+          difficulty: 1,
+          statement: "Özyineleme durma koşuluna ulaşınca biter.",
+          correct_boolean: true,
+          sources: [{ document_id: doc.id, page: 46, quote }],
+        }),
+        model: "test-model",
+        input_tokens: 100,
+        output_tokens: 50,
+      };
+    };
+    const job = await asUser(db, teacher.id, (tx) =>
+      queueAI(
+        tx,
+        teacher,
+        course.id,
+        { document_ids: [doc.id], objective_id: advanced.id, count: 1 },
+        "ai_generate",
+      ),
+    );
+    await runNextJob(db, fake);
+    expect(
+      (await db.query("select status from background_jobs where id=$1", [job.id]))[0].status,
+    ).toBe("completed");
+    const [draft] = await db.query<{ id: string }>(
+      "insert into curriculum_drafts(course_id,data,origin) values($1,'{}','ai') returning id",
+      [course.id],
+    );
+    await expect(
+      asUser(db, teacher.id, (tx) =>
+        approveCurriculum(tx, teacher, course.id, {
+          id: draft.id,
+          data: {
+            course_title: course.title,
+            term: null,
+            questions: [],
+            topics: [
+              {
+                title: "Özyineleme",
+                week: 2,
+                scheduled_date: today(),
+                date_is_inferred: false,
+                objective_titles: ["Durma koşulunu uygulayabilme"],
+                sources: [{ document_id: doc.id, page: 46, quote }],
+              },
+            ],
+          },
+        }),
+      ),
+    ).resolves.toEqual({ applied: true });
+  });
   it("bütçe dolunca iş ertesi güne ertelenir ve sağlayıcı çağrılmaz", async () => {
     process.env.AI_DAILY_BUDGET_USD = "0.0000001";
     const job = await asUser(db, teacher.id, (tx) =>

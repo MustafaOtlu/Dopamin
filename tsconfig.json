@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -23,9 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
@@ -41,8 +35,5 @@
     ".next-teacher/types/**/*.ts",
     ".next-teacher/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "mobile",
-    "node_modules"
-  ]
+  "exclude": ["Dopamin", "mobile", "node_modules"]
 }

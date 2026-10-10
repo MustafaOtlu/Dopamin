@@ -1,5 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
+import path from "node:path";
+const localBrowsers = path.resolve(".data/playwright-browsers");
+if (!process.env.PLAYWRIGHT_BROWSERS_PATH && existsSync(localBrowsers))
+  process.env.PLAYWRIGHT_BROWSERS_PATH = localBrowsers;
 process.env.PUSULA_E2E_RUN_ID ||= randomUUID();
 export default defineConfig({
   testDir: "./e2e",

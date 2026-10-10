@@ -1,9 +1,8 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FileText, Upload, RefreshCw, Sparkles, Check, Eye, Trash2, History } from "lucide-react";
+import { FileText, Upload, RefreshCw, Sparkles, Eye, Trash2, History } from "lucide-react";
 import type { Objective } from "@/types/domain";
 import type { Document } from "@/modules/documents/service";
-import type { CurriculumOutput } from "@/modules/ai/contracts";
 import { api, errorMessage } from "@/lib/client";
 import { Empty, ErrorBanner, Field, Modal, Pill } from "./ui";
 import { WebSourceSettings, type WebSourceState } from "./web-source-settings";
@@ -19,18 +18,16 @@ interface ContentState {
     heartbeat_at: string | null;
     scheduled: boolean;
     poll_soon: boolean;
-    result: { generated?: number; published?: number; needs_review?: number } | null;
+    result: {
+      generated?: number;
+      published?: number;
+      needs_review?: number;
+      automatic_curriculum?: boolean;
+      topics?: number;
+      objectives_created?: number;
+      schedule_inferred?: boolean;
+    } | null;
     error_message: string | null;
-  }[];
-  drafts: { id: string; origin: string; data: CurriculumOutput; status: string }[];
-  questions: {
-    id: string;
-    draft_id: string;
-    topic: string;
-    question: string;
-    reason: string;
-    options: string[];
-    answer: string | null;
   }[];
   usage: {
     model: string;
@@ -68,11 +65,12 @@ export function DocumentsPanel({
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
     [detail, setDetail] = useState<Detail | null>(null),
-    [draft, setDraft] = useState<ContentState["drafts"][number] | null>(null),
     [generate, setGenerate] = useState(false);
   const [replaceId, setReplaceId] = useState<string | undefined>(),
     [removing, setRemoving] = useState<Document | null>(null);
   const uploadRef = useRef<HTMLInputElement>(null);
+  const [curriculumUpload, setCurriculumUpload] = useState(false);
+  const completedCurricula = useRef(new Set<string>());
   const [web, setWeb] = useState<WebSourceState | null>(null);
   const refresh = useCallback(async () => {
     const [docs, state, sources] = await Promise.all([
@@ -83,12 +81,22 @@ export function DocumentsPanel({
     setDocuments(docs);
     setContent(state);
     setWeb(sources);
+    const completed = state.jobs.filter(
+      (job) =>
+        job.status === "completed" &&
+        job.result?.automatic_curriculum &&
+        !completedCurricula.current.has(job.id),
+    );
+    if (completed.length) {
+      completed.forEach((job) => completedCurricula.current.add(job.id));
+      await onChange();
+    }
     setSelected((old) =>
       old.filter((id) =>
         docs.some((doc) => doc.id === id && doc.allowed && doc.status === "ready"),
       ),
     );
-  }, [courseId]);
+  }, [courseId, onChange]);
   useEffect(() => {
     let active = true;
     Promise.all([
@@ -137,16 +145,19 @@ export function DocumentsPanel({
       form.set("file", file);
       form.set("course_id", courseId);
       form.set("purpose", "document");
+      if (curriculumUpload) form.set("build_curriculum", "true");
       if (replaceId) form.set("replace_id", replaceId);
       const response = await fetch("/api/uploads", { method: "POST", body: form });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
       setNotice(
-        result.duplicate
-          ? "Bu belge daha önce yüklendi."
-          : replaceId
-            ? "Yeni kaynak sürümü yüklendi. Eski soruların kaynakları korunur."
-            : "Belge yüklendi. Metin sayfa referanslarıyla çıkarılıyor.",
+        curriculumUpload
+          ? "Müfredat PDF’i alındı. AI konu ve kazanımları otomatik olarak derse ekleyecek."
+          : result.duplicate
+            ? "Bu belge daha önce yüklendi."
+            : replaceId
+              ? "Yeni kaynak sürümü yüklendi. Eski soruların kaynakları korunur."
+              : "Belge yüklendi. Metin sayfa referanslarıyla çıkarılıyor.",
       );
       setReplaceId(undefined);
     });
@@ -176,11 +187,23 @@ export function DocumentsPanel({
           disabled={busy}
           onClick={() => {
             setReplaceId(undefined);
+            setCurriculumUpload(false);
             uploadRef.current?.click();
           }}
         >
           <Upload size={17} />
           {busy ? "Yükleniyor…" : "PDF yükle"}
+        </button>
+        <button
+          className="button primary"
+          disabled={busy || !aiConfigured}
+          onClick={() => {
+            setReplaceId(undefined);
+            setCurriculumUpload(true);
+            uploadRef.current?.click();
+          }}
+        >
+          <Sparkles size={17} /> Müfredat PDF yükle
         </button>
         <input
           ref={uploadRef}
@@ -204,11 +227,19 @@ export function DocumentsPanel({
                 className="button small secondary"
                 disabled={!selected.length || !aiConfigured || busy}
                 onClick={() =>
-                  act(() => api(`courses/${courseId}/ai/analyze`, { document_ids: selected }))
+                  act(async () => {
+                    await api(`courses/${courseId}/ai/analyze`, {
+                      document_ids: selected,
+                      auto_apply: true,
+                    });
+                    setNotice(
+                      "AI müfredatı hazırlıyor. Konu ve kazanımlar tamamlandığında otomatik eklenecek.",
+                    );
+                  })
                 }
               >
                 <Sparkles size={15} />
-                Kapsamı analiz et
+                Müfredatı oluştur
               </button>
               <button
                 className="button small primary"
@@ -279,6 +310,7 @@ export function DocumentsPanel({
                       aria-label={`${d.title} yeni sürüm yükle`}
                       disabled={busy}
                       onClick={() => {
+                        setCurriculumUpload(false);
                         setReplaceId(d.id);
                         uploadRef.current?.click();
                       }}
@@ -340,37 +372,18 @@ export function DocumentsPanel({
           <Sparkles size={18} />
           <p>
             AI bağlantısı kurulunca kapsam analizi ve etkinlik üretimi açılır. Çıkarılan metni ve
-            müfredat taslaklarını şimdiden kullanabilirsin.
+            kaynaklarını şimdiden inceleyebilirsin.
           </p>
         </div>
       )}
-      {content?.drafts.length ? (
-        <>
-          <div className="section-heading">
-            <h3>Müfredat taslakları</h3>
-            <span className="muted">Tarih ve kazanımları doğrula</span>
-          </div>
-          <div className="activity-list">
-            {content.drafts.map((d) => (
-              <article className="activity-row" key={d.id}>
-                <span className="activity-row-icon color-blue">
-                  <FileText size={20} />
-                </span>
-                <div className="activity-row-main">
-                  <h3>{d.data.course_title}</h3>
-                  <p>
-                    {d.data.topics.length} konu ·{" "}
-                    {d.origin === "ai" ? "AI taslağı" : "Belgeden çıkarılan başlıklar"}
-                  </p>
-                </div>
-                <button className="button small secondary" onClick={() => setDraft(d)}>
-                  İncele ve düzenle
-                </button>
-              </article>
-            ))}
-          </div>
-        </>
-      ) : null}
+      <div className="source-info" role="status">
+        <Sparkles size={18} />
+        <p>
+          {objectives.length
+            ? `Müfredatta ${objectives.length} kazanım hazır. Seçtiğin kaynaklardan etkinlik üretebilirsin.`
+            : "Müfredat PDF yükle: AI konu ve kazanımları çıkarıp derse ekler. Daha önce yüklediğin PDF’i seçip Müfredatı oluştur seçeneğini de kullanabilirsin. Etkinlik üretimi müfredat hazır olduğunda açılır."}
+        </p>
+      </div>
       {content?.jobs.length ? (
         <>
           <div className="section-heading">
@@ -412,7 +425,7 @@ export function DocumentsPanel({
                     : j.kind === "web_fetch"
                       ? "Web kaynağı okuma"
                       : j.kind === "ai_analyze"
-                        ? "Kapsam analizi"
+                        ? "Müfredat oluşturma"
                         : j.kind === "file_cleanup"
                           ? "Kaynak dosyası temizliği"
                           : "Etkinlik üretimi"}
@@ -443,6 +456,14 @@ export function DocumentsPanel({
                   <small>
                     {j.result.generated} soru · {j.result.published || 0} yayında ·{" "}
                     {j.result.needs_review || 0} incelemede
+                  </small>
+                )}
+                {j.result?.automatic_curriculum && (
+                  <small>
+                    {j.result.topics} konu · {j.result.objectives_created} yeni kazanım müfredata
+                    eklendi.
+                    {j.result.schedule_inferred &&
+                      " PDF’de eksik olan takvim bilgileri için geçici çalışma planı oluşturuldu; Müfredat bölümünden değiştirebilirsin."}
                   </small>
                 )}
                 {j.error_message && <small>{j.error_message}</small>}
@@ -584,19 +605,6 @@ export function DocumentsPanel({
           </div>
         </Modal>
       )}
-      {draft && content && (
-        <DraftEditor
-          draft={draft}
-          documents={documents}
-          questions={content.questions.filter((q) => q.draft_id === draft.id)}
-          courseId={courseId}
-          onClose={() => setDraft(null)}
-          onSaved={async () => {
-            await refresh();
-            await onChange();
-          }}
-        />
-      )}
       {generate && (
         <Modal title="Kaynaklardan etkinlik üret" onClose={() => setGenerate(false)}>
           <form
@@ -639,135 +647,5 @@ export function DocumentsPanel({
         </Modal>
       )}
     </section>
-  );
-}
-function DraftEditor({
-  draft,
-  documents,
-  questions,
-  courseId,
-  onClose,
-  onSaved,
-}: {
-  draft: ContentState["drafts"][number];
-  documents: Document[];
-  questions: ContentState["questions"];
-  courseId: string;
-  onClose: () => void;
-  onSaved: () => Promise<void>;
-}) {
-  const [topics, setTopics] = useState(draft.data.topics),
-    [error, setError] = useState(""),
-    [busy, setBusy] = useState(false),
-    [answers, setAnswers] = useState<Record<string, string>>(
-      Object.fromEntries(questions.map((q) => [q.id, q.answer || ""])),
-    );
-  function change(index: number, values: Partial<CurriculumOutput["topics"][number]>) {
-    setTopics((old) => old.map((t, i) => (i === index ? { ...t, ...values } : t)));
-  }
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    try {
-      for (const q of questions) {
-        if (!answers[q.id].trim()) throw new Error("Bekleyen kapsam sorularını yanıtla.");
-        if (answers[q.id] !== q.answer)
-          await api(`courses/${courseId}/ai/clarify`, { id: q.id, answer: answers[q.id] });
-      }
-      await api(`courses/${courseId}/ai/approve-curriculum`, {
-        id: draft.id,
-        data: { ...draft.data, topics },
-      });
-      await onSaved();
-      onClose();
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <Modal wide title="Müfredatı doğrula" onClose={onClose}>
-      <form onSubmit={save}>
-        <ErrorBanner message={error} />
-        {questions.map((q) => (
-          <section className="clarification" key={q.id}>
-            <Pill tone="orange">{q.topic}</Pill>
-            <h3>{q.question}</h3>
-            <p className="muted">{q.reason}</p>
-            <Field label="Kapsam açıklaman">
-              <textarea
-                value={answers[q.id]}
-                required
-                rows={2}
-                onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
-              />
-            </Field>
-            {q.options.length > 0 && (
-              <p className="field-help">Öneriler: {q.options.join(" · ")}</p>
-            )}
-          </section>
-        ))}
-        {topics.map((t, i) => (
-          <section className="draft-topic" key={i}>
-            <span className="eyebrow">KONU {i + 1}</span>
-            <Field label="Konu başlığı">
-              <input
-                value={t.title}
-                required
-                onChange={(e) => change(i, { title: e.target.value })}
-              />
-            </Field>
-            <div className="form-grid">
-              <Field label="Hafta">
-                <input
-                  type="number"
-                  min={1}
-                  max={52}
-                  value={t.week || ""}
-                  required
-                  onChange={(e) => change(i, { week: Number(e.target.value) })}
-                />
-              </Field>
-              <Field label="İşleneceği tarih">
-                <input
-                  type="date"
-                  value={t.scheduled_date || ""}
-                  required
-                  onChange={(e) =>
-                    change(i, { scheduled_date: e.target.value, date_is_inferred: false })
-                  }
-                />
-              </Field>
-            </div>
-            {t.date_is_inferred && (
-              <p className="field-help">Bu tarih AI tarafından tahmin edildi; doğrula.</p>
-            )}
-            <Field label="Her satıra bir ölçülebilir kazanım">
-              <textarea
-                value={t.objective_titles.join("\n")}
-                required
-                rows={3}
-                onChange={(e) => change(i, { objective_titles: e.target.value.split("\n") })}
-              />
-            </Field>
-            <div className="source-quote">
-              <span>
-                {documents.find((d) => d.id === t.sources[0]?.document_id)?.source_kind === "web"
-                  ? "Bölüm"
-                  : "Sayfa"}{" "}
-                {t.sources[0]?.page}
-              </span>
-              <blockquote>{t.sources[0]?.quote}</blockquote>
-            </div>
-          </section>
-        ))}
-        <button className="button primary full-width" disabled={busy}>
-          <Check size={17} />
-          {busy ? "Uygulanıyor…" : "Doğrula ve müfredata ekle"}
-        </button>
-      </form>
-    </Modal>
   );
 }

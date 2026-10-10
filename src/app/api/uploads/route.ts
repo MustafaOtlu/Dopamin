@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { after } from "next/server";
 import { requireUser } from "@/modules/auth/service";
-import { getDb } from "@/lib/db";
+import { asUser, getDb } from "@/lib/db";
+import { ensureAI } from "@/modules/ai/provider";
+import { scheduleUploadedCurriculum } from "@/modules/ai/service";
 import { apiError, checkOrigin, json } from "@/lib/http";
 import { assert } from "@/lib/errors";
 import { uploadSource } from "@/modules/documents/service";
@@ -37,6 +39,11 @@ export async function POST(request: Request) {
         .parse(form.get("purpose") || "document"),
       file = form.get("file");
     assert(file instanceof File, "Bir dosya seç.");
+    const buildCurriculum = form.get("build_curriculum") === "true";
+    if (buildCurriculum) {
+      assert(purpose === "document", "Müfredat için PDF yükle.");
+      ensureAI();
+    }
     const db = await getDb();
     const result =
       purpose === "submission"
@@ -55,6 +62,8 @@ export async function POST(request: Request) {
             purpose,
             form.has("replace_id") ? z.uuid().parse(form.get("replace_id")) : undefined,
           );
+    if (buildCurriculum)
+      await asUser(db, user.id, (tx) => scheduleUploadedCurriculum(tx, user, courseId, result.id));
     if (!process.env.DATABASE_URL) after(() => drainJobs(db));
     return json(result);
   } catch (err) {

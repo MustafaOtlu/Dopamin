@@ -41,21 +41,83 @@ export const generatedOutput = z.object({
   instruction: z.string().min(1).max(500),
   explanation: z.string().min(1).max(2000),
   difficulty: z.number().int().min(1).max(3),
-  statement: z.string(),
-  correct_boolean: z.boolean(),
+  statement: z.string().default(""),
+  correct_boolean: z.boolean().default(false),
   items: z
-    .array(z.object({ id: z.string(), label: z.string(), match: z.string(), category: z.string() }))
-    .max(20),
-  categories: z.array(z.object({ id: z.string(), label: z.string() })).max(8),
+    .array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        match: z.string().default(""),
+        category: z.string().default(""),
+      }),
+    )
+    .max(20)
+    .default([]),
+  categories: z
+    .array(z.object({ id: z.string(), label: z.string() }))
+    .max(8)
+    .default([]),
   blanks: z
-    .array(z.object({ id: z.string(), label: z.string(), accepted: z.array(z.string()) }))
-    .max(12),
+    .array(
+      z.object({ id: z.string(), label: z.string().default(""), accepted: z.array(z.string()) }),
+    )
+    .max(12)
+    .default([]),
   sources: z.array(source).min(1).max(10),
 });
 export function generationSchema(index: number) {
   const kind =
     generatedOutput.shape.kind.options[index % generatedOutput.shape.kind.options.length];
-  return generatedOutput.extend({ kind: z.enum([kind]) });
+  const common = generatedOutput
+    .pick({
+      title: true,
+      instruction: true,
+      explanation: true,
+      difficulty: true,
+      sources: true,
+    })
+    .extend({
+      kind: z.enum([kind]),
+      title: z.string().min(1).max(70),
+      instruction: z.string().min(1).max(250),
+      explanation: z.string().min(1).max(600),
+    });
+  const item = z.object({ id: z.string().min(1).max(40), label: z.string().min(1).max(100) });
+  switch (kind) {
+    case "true_false":
+      return common.extend({ statement: z.string().min(5).max(500), correct_boolean: z.boolean() });
+    case "matching":
+      return common.extend({
+        items: z
+          .array(item.extend({ match: z.string().min(1).max(150) }))
+          .min(2)
+          .max(5),
+      });
+    case "ordering":
+      return common.extend({ items: z.array(item).min(2).max(5) });
+    case "fill_blank":
+      return common.extend({
+        statement: z.string().min(5).max(500),
+        blanks: z
+          .array(
+            z.object({
+              id: z.string().min(1).max(40),
+              accepted: z.array(z.string().min(1).max(100)).min(1).max(6),
+            }),
+          )
+          .min(1)
+          .max(2),
+      });
+    case "categorize":
+      return common.extend({
+        items: z
+          .array(item.extend({ category: z.string().min(1).max(40) }))
+          .min(2)
+          .max(4),
+        categories: z.array(item).min(2).max(4),
+      });
+  }
 }
 
 export interface SourceChunk {
@@ -85,6 +147,8 @@ export function verifyCitations(sources: z.infer<typeof source>[], chunks: Sourc
 export function toActivity(output: unknown, chunks: SourceChunk[]): ActivityInput {
   const data = generatedOutput.parse(output);
   verifyCitations(data.sources, chunks);
+  // Defaults are for unused fields only; never invent a missing answer for the selected kind.
+  generationSchema(generatedOutput.shape.kind.options.indexOf(data.kind)).parse(output);
   if (
     data.kind === "matching" &&
     data.items.some((item) => normalized(item.label) === normalized(item.match))
@@ -94,6 +158,32 @@ export function toActivity(output: unknown, chunks: SourceChunk[]): ActivityInpu
       "Eşleştirme kartının iki yüzü aynı olamaz. Yeni bir açıklama gerekli.",
       "AI_INVALID_OUTPUT",
     );
+  const distinct = (values: string[]) => new Set(values.map(normalized)).size === values.length;
+  if (
+    data.kind === "matching" &&
+    (!distinct(data.items.map((item) => item.label)) ||
+      !distinct(data.items.map((item) => item.match)))
+  )
+    throw new AppError(
+      422,
+      "Eşleştirmede aynı kavram veya tanım birden fazla kullanılamaz.",
+      "AI_INVALID_OUTPUT",
+    );
+  if (data.kind === "ordering" && !distinct(data.items.map((item) => item.label)))
+    throw new AppError(422, "Sıralama adımları birbirinden farklı olmalı.", "AI_INVALID_OUTPUT");
+  if (data.kind === "fill_blank") {
+    const placeholders = [...data.statement.matchAll(/\{\{([^{}]+)\}\}/g)].map((match) => match[1]);
+    if (
+      placeholders.length !== data.blanks.length ||
+      !distinct(placeholders) ||
+      placeholders.some((id) => !data.blanks.some((blank) => blank.id === id))
+    )
+      throw new AppError(
+        422,
+        "Metindeki boşluklar cevap alanlarıyla birebir eşleşmeli.",
+        "AI_INVALID_OUTPUT",
+      );
+  }
   const common = {
     kind: data.kind,
     title: data.title,

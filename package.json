@@ -11,7 +11,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "node scripts/test-e2e.mjs",
+    "test:e2e": "playwright test",
     "db:migrate": "node scripts/run-ts.mjs scripts/migrate.ts",
     "db:seed": "node scripts/run-ts.mjs scripts/seed.ts",
     "worker": "node scripts/run-ts.mjs src/workers/main.ts",

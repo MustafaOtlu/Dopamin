@@ -12,7 +12,7 @@ export async function loadSources(
   tx: Database,
   courseId: string,
   documentIds: string[],
-  limit: number | null = 30,
+  limit: number | null = null,
 ) {
   const docs = await tx.query(
     `select d.id from documents d where course_id=$1 and id=any($2::uuid[]) and status='ready' and superseded_by is null and ${sourceAllowedSql}`,
@@ -42,9 +42,10 @@ export async function queueAI(
       document_ids: z.array(z.uuid()).min(1).max(10),
       objective_id: z.uuid().optional(),
       count: z.number().int().min(1).max(10).default(3),
+      auto_apply: z.boolean().default(false),
     })
     .parse(input);
-  await loadSources(tx, courseId, data.document_ids);
+  await loadSources(tx, courseId, data.document_ids, 0);
   if (kind === "ai_generate")
     assert(
       data.objective_id &&
@@ -74,6 +75,45 @@ export async function queueAI(
           publication_policy_revision: course.publication_policy_revision,
         }),
       ],
+    )
+  )[0];
+}
+export async function scheduleUploadedCurriculum(
+  tx: Database,
+  user: User,
+  courseId: string,
+  documentId: string,
+) {
+  await ownCourse(tx, user, courseId);
+  const [course] = await tx.query<{ archived: boolean }>(
+    "select archived from courses where id=$1 for update",
+    [courseId],
+  );
+  assert(!course.archived, "Arşivdeki derste müfredat oluşturulamaz.", 409);
+  const [doc] = await tx.query<{ status: string }>(
+    "select status from documents where id=$1 and course_id=$2 and superseded_by is null and status!='deleted'",
+    [documentId, courseId],
+  );
+  assert(doc, "Müfredat kaynağı bulunamadı.");
+  if (doc.status !== "ready") {
+    const jobs = await tx.query(
+      `update background_jobs set payload=payload || '{"auto_curriculum":true}'::jsonb
+       where course_id=$1 and kind='pdf_extract' and payload->>'document_id'=$2 and status in ('queued','processing') returning id`,
+      [courseId, documentId],
+    );
+    assert(jobs.length, "Önce PDF metnini yeniden işle; ardından müfredatı oluştur.");
+    return jobs[0];
+  }
+  const [active] = await tx.query(
+    `select id from background_jobs where course_id=$1 and kind='ai_analyze' and status in ('queued','processing')
+     and payload->>'auto_apply'='true' and payload->'document_ids' @> $2::jsonb`,
+    [courseId, JSON.stringify([documentId])],
+  );
+  if (active) return active;
+  return (
+    await tx.query(
+      "insert into background_jobs(course_id,created_by,kind,payload) values($1,$2,'ai_analyze',$3) returning id",
+      [courseId, user.id, JSON.stringify({ document_ids: [documentId], auto_apply: true })],
     )
   )[0];
 }

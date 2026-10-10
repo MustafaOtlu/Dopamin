@@ -3,6 +3,17 @@ import { AppError } from "@/lib/errors";
 import { maxOutputTokens } from "./budget";
 import type { Generate } from "./provider";
 
+export function geminiThinkingLevel() {
+  const level = process.env.AI_GEMINI_THINKING_LEVEL || "medium";
+  if (!["minimal", "low", "medium", "high"].includes(level))
+    throw new AppError(
+      503,
+      "Gemini düşünme düzeyi minimal, low, medium veya high olmalı.",
+      "AI_PROVIDER_ERROR",
+    );
+  return level;
+}
+
 // Gemini accepts a subset of JSON Schema. Zod still validates the full contract on return.
 export function geminiSchema(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(geminiSchema);
@@ -47,7 +58,10 @@ export const generateGemini: Generate = async (name, schema, instructions, input
     store: false,
     system_instruction: instructions,
     input: JSON.stringify({ task: name, data: input }),
-    generation_config: { max_output_tokens: maxOutputTokens, thinking_level: "low" },
+    generation_config: {
+      max_output_tokens: maxOutputTokens,
+      thinking_level: geminiThinkingLevel(),
+    },
     response_format: { type: "text", mime_type: "application/json", schema: jsonSchema },
   });
   if (Buffer.byteLength(body, "utf8") > 500_000)

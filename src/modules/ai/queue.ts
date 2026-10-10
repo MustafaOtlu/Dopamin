@@ -81,6 +81,7 @@ export async function retryContentJob(tx: Database, user: User, courseId: string
   }
   const [retried] = await tx.query(
     `update background_jobs set status='queued',attempts=0,
+    payload=case when kind='ai_analyze' then payload || '{"auto_apply":true}'::jsonb else payload end,
     manual_retries=manual_retries+1,available_at=now(),leased_until=null,lease_token=null,
     heartbeat_at=null,error_message=null,completed_at=null where id=$1 returning id,status,manual_retries`,
     [jobId],

@@ -5,7 +5,9 @@ import hooks from "eslint-plugin-react-hooks";
 import a11y from "eslint-plugin-jsx-a11y";
 
 export default defineConfig([
-  globalIgnores(["mobile/**",
+  globalIgnores([
+    "mobile/**",
+    "Dopamin/**",
     ".data/**",
     ".next/**",
     ".next-e2e/**",
