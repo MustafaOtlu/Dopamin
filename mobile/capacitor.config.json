@@ -1,0 +1,8 @@
+{
+  "appId": "app.dopamin.student",
+  "appName": "Dopamin",
+  "webDir": "www",
+  "backgroundColor": "#101f28",
+  "server": { "url": "http://127.0.0.1:3000", "cleartext": true, "errorPath": "offline.html" },
+  "android": { "allowMixedContent": false, "backgroundColor": "#101f28", "webContentsDebuggingEnabled": true }
+}
