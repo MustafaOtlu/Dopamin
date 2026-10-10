@@ -1,0 +1,263 @@
+DOPAMİN — PROJE ÖZETİ
+Hazırlanma tarihi: 9 Ekim 2026
+
+1. PROJENİN AMACI
+
+Dopamin, üniversite öğrencilerinin derslerini küçük, etkileşimli alıştırmalarla
+pekiştirmesini sağlayan bir eğitim platformudur. Öğretmen dersleri, kaynakları,
+kazanımları ve ödevleri yönetir. Öğrenci günlük görevlerini tamamlar, yanlışlarını
+tekrar eder, arkadaşlarıyla yarışır ve kazandığı tokenlarla uygulamasını
+kişiselleştirir. Yeni marka Dopamin, maskot ise penguendir.
+
+2. ÖĞRENCİ ARAYÜZÜ
+
+Bilgisayarda web sayfası, Android'de kurulabilir uygulama bulunur. Android sürümü
+Capacitor ile paketlenmiştir; mevcut deneme APK'sı çalışan yerel sunucuya bağlanır.
+Tamamen çevrimdışı çalışan veya tüm ekranları yerel Android bileşenleriyle yazılmış
+bir uygulama değildir.
+
+Bilgisayarda sol menü yukarıdan aşağıya:
+Öğren, Görevler, Maç, Mağaza, Profil.
+
+Mobilde alt menü soldan sağa:
+Görevler, Maç, Öğren, Mağaza, Profil.
+
+Öğren: Ders seçimi ve haftalara ayrılmış yuvarlak konu yolu. Bir konu seçilince
+Tekrar ve Derse hazırlık seçenekleri açılır. Tekrar, yayımlanmış sorularla
+pekiştirmedir. Hazırlık, konu ve kazanımlardan kısa bir ön bakış sunar; bu görünüm
+yeni bir AI anlatımı üretmez ve XP vermez. Görevler bu ekranda gösterilmez.
+
+Görevler: Bütün derslerden oluşturulan günlük plan, Hatalarım, yarım kalan
+çalışmalar ve ödevlere erişim. Plan; haftanın önemli kazanımlarını, eksikleri,
+ön koşulları ve aralıklı tekrar ihtiyacını dikkate alır. Başlanan planın içeriği
+sonradan değişip öğrencinin hedefini kaydırmaz.
+
+Maç: Klasik ve Seri meydan okumalar, eşleşme arama, sınıf sıralaması ve haftalık lig.
+
+Mağaza: Avatar, efektli çerçeve, bütün uygulamayı etkileyen tema, profil banner'ı,
+isim fontu ve seri koruyucu. Önizleme öğrencinin kendi adı, avatarı ve mevcut
+kişiselleştirmeleriyle gösterilir; önizleme hesabın ayarlarını değiştirmez.
+
+Profil: Avatar ve isim, XP/seviye, başarımlar, seri, lig, sahip olunan ürünler,
+öğrenme geçmişi ve hesap ayarları. Öğrenci profil paylaşımını açarsa diğer
+öğrenciler genel profilini görebilir.
+
+3. ÖĞRETMEN TARAFI
+
+Öğretmenin çalışma masası; değerlendirme bekleyen teslimleri, içerik incelemelerini
+ve öğrenci destek taleplerini dersler arasında bir araya getirir. Yaklaşan teslim
+tarihleri ve aktif dersler ayrıca gösterilir.
+
+Her dersin içinde Etkinlikler, Müfredat, Kaynaklar ve AI, Ödevler, Öğrenciler,
+Analiz ve Not defteri sekmeleri vardır.
+
+Öğretmen ders açabilir, sınıf kodu paylaşabilir, kodu yenileyebilir veya iptal
+edebilir; ders ayarlarını değiştirebilir, dersi arşivleyebilir ve geri açabilir.
+Konu/kazanım oluşturabilir, etkinlik hazırlayabilir, düzenleyebilir ve yayımlayabilir.
+Öğrencilerin ilk cevaplarını, tekrarlarını ve kazanım bazındaki eksiklerini izler.
+
+Ödevler etkileşimli alıştırma veya geleneksel metin/bağlantı/dosya teslimi olabilir.
+Teslim tarihi, geç teslim politikası, geri çekme, düzeltme isteme, yeniden teslim,
+not ve geri bildirim akışları bulunur. Not defteri öğrenciyi, ödevi, teslim durumunu
+ve güncel notu bir araya getirir; filtreleme ve CSV indirme sağlar.
+
+Öğrencinin kozmetikleri, token bakiyesi ve kişisel oyunlaştırma görünümü öğretmen
+paneline taşınmaz. Akademik değerlendirme ile kişiselleştirme ayrı tutulur.
+
+4. ÖĞRENME VE İÇERİK MOTORU
+
+Altı etkinlik türü desteklenir:
+- Doğru / yanlış
+- Kavram eşleştirme
+- Sıralama
+- Boşluk tamamlama
+- Kategorilere ayırma
+- Görsel bölge seçme
+
+Cevaplar sunucuda değerlendirilir ve kullanılan soru sürümüyle kaydedilir.
+Yanlış cevaplar Hatalarım akışına girer. Oturum içindeki tekrar ile daha sonra
+yapılan yanlış tekrarı ayrı kayıtlardır. Tek bir doğru cevap öğrenciyi hemen
+bir kazanımda yetkin saymaz; farklı günler ve farklı etkinliklerdeki sonuçlar
+birlikte değerlendirilir. Ödev ve maç sonuçları kişisel hâkimiyet hesabına katılmaz.
+
+Öğrenci bir kazanımda zorlandığını notla bildirebilir. Öğretmen yanıt verebilir;
+talep kapatılabilir veya yeniden açılabilir. İşlem geçmişi korunur.
+
+5. PDF, WEB KAYNAKLARI VE YAPAY ZEKÂ
+
+Öğretmen özel ders kaynaklarını yükleyebilir. PDF metinleri sayfa ve kaynak
+bilgileriyle ayrıştırılır. Taranmış sayfalarda Türkçe/İngilizce OCR desteği vardır.
+Dosya sınırı 20 MB, PDF sınırı 300 sayfadır; belge başına en fazla 20 sayfaya
+OCR uygulanır. İzin verilen HTTPS web kaynaklarından da metin alınabilir.
+
+AI hattı; kaynaklardan müfredat taslağı çıkarma, belirsiz kapsamı öğretmene sorma,
+kazanımlara göre etkinlik üretme ve incelemeye sunma adımlarını içerir.
+Üretilen içerik yapılandırılmış veri şemasına ve kaynak alıntılarına göre kontrol
+edilir. Mevcut AI üretim sözleşmesi beş metin tabanlı etkinlik türünü kapsar;
+görsel bölge etkinliği manuel editörde desteklenir.
+
+Varsayılan yayın yolu öğretmen incelemesidir. Öğretmenin ders bazında açıkça
+etkinleştirdiği otomatik yayın, ayrı bir AI incelemesi ve sürüm/izin kontrolleri
+gerektirir. AI incelemesinden geçmek akademik doğruluğun kesin kanıtı değildir.
+
+Mevcut sağlayıcı adaptörü OpenAI Responses API biçimini kullanır. Önceki model
+önerisi GPT-6.1 Sol'dur; gerçek sağlayıcı/model bağlantısı doğrulanmış değildir.
+API anahtarı ve model yapılandırılmadan AI üretimi çalışmaz. Manuel içerik
+hazırlama ve PDF/OCR işlemleri AI anahtarı olmadan kullanılabilir.
+
+6. KLASİK VE SERİ MAÇIN FARKI
+
+İki modda da süreye karşı yarışılır ve iki oyuncu aynı soru sürümlerini çözer.
+Soru paketi en fazla beş etkinlik içerir. Sonuçlar karşılaşma tamamlanınca açılır.
+
+Klasik: Oyuncular farklı zamanlarda oynar. Daveti gönderen kendi turunu hemen
+oynayabilir; karşı taraf daha sonra kabul edip oynar. Her oyuncunun turu
+180 saniyedir. Davetin kabul süresi yedi gündür.
+
+Seri: İki oyuncu birlikte hazır olur. Ortak geri sayımdan sonra aynı anda
+başlarlar ve ortak 120 saniyelik süreyi kullanırlar. Davet süresi 15 dakikadır.
+
+Önce cevap başarısı, eşitlikte süre karşılaştırılır. Sayaç sunucu zamanına
+bağlıdır; sayfayı yenilemek süreyi sıfırlamaz. Süresinde cevaplanmayanlar sıfır
+puan alır. Rastgele eşleşme aynı ders ve aynı mod için arama açan öğrenciler
+arasında yapılır; arama iptal edilebilir.
+
+7. XP, TOKEN, SEVİYE VE LİG
+
+- Tamamlanan günlük görev: 40 XP.
+- Günün bütün hedefini tamamlamak: 10 token.
+- Gönüllü tekrar/ileri öğrenmede bir kazanım için ilk tamamlanan çalışma: 15 XP;
+  aynı kazanım üzerinden sürekli tekrar ödülü alınmaz.
+- Hatalarım'da düzeltilen kazanım: haftada bir kez 5 XP.
+- Ödüle uygun maçta kazanan: 30 XP ve 5 token.
+- Kaybeden veya berabere kalan: 15 XP.
+
+Maç ödülleri kişi başına günde ilk beş tamamlanan karşılaşmayla sınırlıdır ve
+en az bir cevap verilmesini gerektirir. Sonraki maçlar antrenman olarak oynanır.
+Reddedilen veya tamamlanmayan davet kazanan ödülü üretmez.
+
+Seviye, toplam XP üzerinden hesaplanır: her 250 XP bir seviye artırır.
+Örnek: 0–249 XP seviye 1, 250–499 XP seviye 2.
+
+Lig puanı o hafta gerçekten kazanılan XP toplamıdır; bütün zamanların XP'si
+değildir. Ligler Kaşif, Gezgin ve Usta kademelerindedir. Katılım isteğe bağlıdır,
+genel profil paylaşımı gerektirir ve gruplar en fazla 30 kişidir. Yeterli sayıda
+katılımcı varsa üst/alt yüzde 20 için yükselme ve düşme kuralları uygulanır;
+eşit puanlar keyfî biçimde ayrılmaz. Eski haftanın sonucu kapatılıp korunur.
+
+Günlük seri için yalnız uygulamayı açmak yeterli değildir. Günlük hedef, telafi,
+koruyucu ve içerik bulunmayan nötr gün ayrı durumlar olarak izlenir. Haftada bir
+ücretsiz telafi ve satın alınabilen seri koruyucu vardır. Haftalık sandık, yedi
+hedef/telafi gününden sonra 50 token verir; koruyucu gün hedef tamamlaması sayılmaz.
+Ödüller ve satın almalar işlem anahtarlarıyla korunur; aynı isteğin tekrarı
+çift ödül veya çift harcama üretmez.
+
+8. GÖRSEL TARZ VE KİŞİSELLEŞTİRME
+
+Öğrenci arayüzü koyu zeminli, penguenli ve yükseltilmiş konu düğmeleri olan bir
+öğrenme yolu kullanır. Emoji yerine SVG çizimleri ve ikonlar kullanılır.
+Penguen doğru cevapta alkışlar, yanlışta üzülür; kutlama, düşünme ve el sallama
+durumları da vardır. Fareyle üzerine gelince veya dokununca animasyon oynar.
+Maç sırasında penguen doğru/yanlış bilgisini erken açığa çıkarmaz.
+
+Mağazada 39 ürün vardır: 11 avatar, 7 çerçeve, 8 tema, 7 banner, 5 isim fontu
+ve 1 seri koruyucu. Bazı ürünler seviye şartına bağlıdır. Tema renkleri ve
+arkaplanları uygulamanın geneline yansır. Yıldızlı sahne düzenli bir desen yerine
+farklı konum, boyut ve parlaklıklarda 420 yıldız içerir.
+
+Ders seçimi özel bir menüyle çalışır; ders ekleme düğmesi yanındadır. Seçili ders
+hesaba göre hatırlanır. Bir oturum bitince dönüş bağlantısı oturumun dersini
+korur; Biyoloji'den çıkışta başka bir derse geçme sorunu bu akışta düzeltildi.
+
+9. TEKNİK YAPI VE GÜVENLİK
+
+Uygulama TypeScript tabanlı modüler bir monolittir. Web tarafında Next.js 16.4,
+React 19.3 ve Tailwind CSS kullanılır. Yerelde PostgreSQL uyumlu PGlite, canlı
+ortam için PostgreSQL/Supabase adaptörleri vardır. Android paketinde Capacitor
+kullanılır. PDF.js, Tesseract, Zod, Vitest, Playwright ve Axe diğer temel araçlardır.
+
+Kod modülleri kimlik doğrulama, dersler, müfredat, belgeler, AI, etkinlikler,
+öğrenme, planlama, hâkimiyet, ödevler, analitik, ödüller ve rekabet olarak ayrılır.
+Veritabanında 27 migration bulunur. Ağır içerik işleri kuyruk/worker ile yürütülür.
+
+Yetkiler sunucuda ve veritabanı satır erişim kurallarıyla kontrol edilir.
+Öğretmen yalnız kendi dersini yönetir; öğrenci yalnız izin verilen yayımlanmış
+materyale erişir. Öğretmen rolünü kayıt formunda seçmek doğrulanmış öğretmen
+yetkisi vermez. Dosyalar özel saklanır, API anahtarları istemciye gönderilmez.
+
+Profil paylaşımı e-posta, token bakiyesi ve özel öğrenme/ödev kayıtlarını açmaz.
+Kaynak kaldırıldığında erişim hemen kesilir; fiziksel dosya/metin temizliği için
+30 günlük teknik saklama süresi vardır. Eski cevap ve soru sürümleri denetim
+için korunur. Şifre değiştirme, diğer oturumları kapatma ve kişisel verileri
+JSON olarak indirme araçları bulunur.
+
+10. YERELDE ÇALIŞTIRMA VE DENEME
+
+Proje klasörü:
+C:\Users\emreyalcib\Desktop\hackathon
+
+İlk kurulum için, uygulama kapalıyken:
+  npm ci
+  Copy-Item .env.example .env.local
+  npm run ocr:prepare
+  npm run db:seed
+  npm run dev
+
+Web adresi: http://127.0.0.1:3000
+Node.js 24 önerilir; paket en az 22.13.0 ister.
+Mevcut .env.local dosyasını yeniden kopyalayıp ayarlarını ezmek gerekmez.
+Yerel veriler .data/postgres, dosyalar .data/files altında saklanır. Aynı yerel
+veritabanını kullanan sunucu açıkken ayrı seed/migration işlemi çalıştırılmamalıdır.
+
+Seed ile gelen yerel örnek hesaplar:
+  Öğrenci Ece Yılmaz: ogrenci@pusula.local
+  Öğretmen Dr. Deniz Aydın: akademisyen@pusula.local
+  Şifre: PusulaDemo2026!
+Bu bilgiler yalnız yerel örnek hesaplar içindir.
+
+Android deneme APK'sı:
+  .data\releases\dopamin-debug.apk
+
+USB hata ayıklama açık Android telefon bağlıyken kurulum:
+  powershell.exe -ExecutionPolicy Bypass -File .\scripts\install-android.ps1
+
+Web sunucusu açık kalmalıdır. Ayrıntılı kurulum: docs/android-testing.md.
+
+11. MEVCUT DURUM VE KALAN İŞLER
+
+Ürün yerel ortamda çalışan kapsamlı bir geliştirme sürümüdür. Öğrenci panelleri,
+öğretmen yönetimi, manuel etkinlikler, kaynak hattı, planlama, ödevler, maçlar,
+ödüller ve kişiselleştirme kod tabanında bulunmaktadır.
+
+Güncel ürün dokümanındaki son kayıtlı doğrulama: 113 birim/entegrasyon testi,
+18 Chromium uçtan uca senaryosu, TypeScript, lint ve üretim derlemesi başarılı.
+Son cevap kutusu değişikliğinden sonra ilgili altı tarayıcı senaryosu tekrar
+geçmiştir. 39 ürünün mobil önizlemelerinde otomatik Axe ihlali ve yatay taşma
+bulunmamıştır. Öğretmen çalışma masası/not defteri için ayrıca test dosyaları
+vardır; bu özeti hazırlarken yeni bir test turu çalıştırılmamıştır.
+
+Android debug APK üretilmiş ve imzası doğrulanmıştır. Fiziksel telefonda kullanım
+henüz doğrulanmamıştır. Gerçek AI çağrıları, Supabase/e-posta teslimi, canlı
+barındırma, uzak CI, kurum doğrulaması ve gerçek kullanıcı pilotu tamamlanmış
+sayılmaz.
+
+Sonraki önemli işler: gerçek servis bağlantıları, farklı derslerden akademik AI
+değerlendirmesi, görsel/tablo içeriklerinin daha kapsamlı işlenmesi, fiziksel cihaz
+ve ekran okuyucu denemeleri, yük/istismar testleri, izleme ve yedekten geri yükleme.
+Kurum/öğretmen doğrulama yöntemi ve hesap silinince akademik kayıtların saklanma
+politikası ayrıca netleştirilmelidir. Üniversiteler arası doğrulanmış rekabet ve
+tam çevrimdışı mobil öğrenme mevcut tamamlanmış kapsamın parçası değildir.
+
+12. AYRINTILI KAYNAKLAR
+
+README.md: kurulum ve genel yapı.
+docs/dopamin.md: güncel öğrenci deneyimi ve maç/kişiselleştirme kuralları.
+docs/progress.md: doğrulama kayıtları ve kalan işler.
+docs/architecture.md: teknik mimari; eski marka/rekabet notları güncel Dopamin
+kurallarıyla birlikte okunmalıdır.
+docs/android-testing.md: APK kurulumu ve telefon testi.
+docs/decisions-pending.md: kurum, canlı bağlantı ve veri saklama kararları.
+src/: uygulama, bileşenler ve iş kuralları.
+db/migrations/: veritabanı şeması ve sürümlü kurallar.
+e2e/ ve src/tests/: uçtan uca, birim ve entegrasyon testleri.
+mobile/ ve scripts/: Android paketleme ve yardımcı işlemler.

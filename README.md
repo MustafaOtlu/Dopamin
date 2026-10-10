@@ -1,2 +1,1 @@
-# Dopamin
 Hackathon
